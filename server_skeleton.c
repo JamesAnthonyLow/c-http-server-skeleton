@@ -14,13 +14,6 @@ void exit_handler(int r){
   closeServer++;
 }
 
-void shutdown_please( int socket ) {
-  int optname= 1;
-  setsockopt(socket,SOL_SOCKET,SO_REUSEADDR,&optname,sizeof(int));
-  shutdown( socket, 2 );
-  close( socket );
-}
-
 int main() {    
   struct sigaction act;
   int create_socket, new_socket;    
@@ -28,7 +21,7 @@ int main() {
   int bufsize = 2048, n;    
   struct sockaddr_in address;    
   char * buffer = malloc(bufsize);    
-  char * data_buffer = malloc(64);
+  char * data_buffer;
 
   act.sa_handler = exit_handler;
   sigaction(SIGINT, &act, NULL);
@@ -46,7 +39,7 @@ int main() {
   }
 
 
-  sprintf(data_buffer, "%s", "World!");
+  data_buffer = "World!";
   n = strlen(data_buffer);
 
   while (1) {    
@@ -70,16 +63,16 @@ int main() {
 
     recv(new_socket, buffer, bufsize, 0);    
     if(buffer[0] == 'P'){
-      memset(data_buffer, 0, 64);
-      while((n = read(new_socket, data_buffer, 64)) > 0);
-      data_buffer[n] = 0;
+      data_buffer = strstr(buffer, "\r\n\r\n") + 4;
     }
     printf("%s\n", buffer);    
+    printf("\n========\n\n");
+    printf("%s\n", data_buffer);
     write(new_socket, "<!DOCTYPE html><html lang=\"en\"><head>", 37);
     write(new_socket, "<meta charset=\"UTF-8\">", 22); 
     write(new_socket, "<script src=\"http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.12.4.min.js\"></script>", 82);
     write(new_socket, "<title></title></head><body><h1>Hello ", 38);
-    write(new_socket, data_buffer, n); 
+    write(new_socket, data_buffer, strlen(data_buffer)); 
     write(new_socket, "</h1>", 5);
     write(new_socket, "<form action=\"http://localhost:15003\" method=\"POST\" >", 53);
     write(new_socket, "<input type=\"text\" name=\"word\" placeholder=\"enter name\"/>", 57);
