@@ -25,7 +25,7 @@ int main() {
   struct sigaction act;
   int create_socket, new_socket;    
   socklen_t addrlen;    
-  int bufsize = 2048;    
+  int bufsize = 2048, n;    
   struct sockaddr_in address;    
   char * buffer = malloc(bufsize);    
   char * data_buffer = malloc(64);
@@ -47,6 +47,7 @@ int main() {
 
 
   sprintf(data_buffer, "%s", "World!");
+  n = strlen(data_buffer);
 
   while (1) {    
     memset(buffer, 0, bufsize);
@@ -70,24 +71,24 @@ int main() {
     recv(new_socket, buffer, bufsize, 0);    
     if(buffer[0] == 'P'){
       memset(data_buffer, 0, 64);
-      read(new_socket, data_buffer, 64);
+      while((n = read(new_socket, data_buffer, 64)) > 0);
+      data_buffer[n] = 0;
     }
     printf("%s\n", buffer);    
     write(new_socket, "<!DOCTYPE html><html lang=\"en\"><head>", 37);
     write(new_socket, "<meta charset=\"UTF-8\">", 22); 
     write(new_socket, "<script src=\"http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.12.4.min.js\"></script>", 82);
     write(new_socket, "<title></title></head><body><h1>Hello ", 38);
-    write(new_socket, data_buffer, strlen(data_buffer)); 
+    write(new_socket, data_buffer, n); 
     write(new_socket, "</h1>", 5);
     write(new_socket, "<form action=\"http://localhost:15003\" method=\"POST\" >", 53);
     write(new_socket, "<input type=\"text\" name=\"word\" placeholder=\"enter name\"/>", 57);
     write(new_socket, "<input type=\"submit\" value=\"Submit\"/></form>", 44);
     write(new_socket, "</body></html>", 14);
-    shutdown( new_socket, 2 );
     close( new_socket );
   }    
 
-cleanup: shutdown_please( new_socket ); shutdown_please( create_socket ); exit(0);
+cleanup: exit(0);
 
          return 0;    
 }
